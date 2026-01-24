@@ -1,0 +1,67 @@
+SQL Scenario 
+Id name datetime
+1 Ram 11:15:52
+2 Vishnu 11:20:30
+1 Ram 11:45:45
+2 Vishnu 11:52:00
+
+How to get the latest values as per entry time 
+Output:
+1 Ram 11:45:45
+2 Vishnu 11:52:00 
+
+SQL:
+
+SELECT id, name, datetime
+FROM (
+    SELECT id, name, datetime,
+           ROW_NUMBER() OVER (PARTITION BY id ORDER BY datetime DESC) AS rn
+    FROM your_table
+) t
+WHERE rn = 1;
+
+
+Max(date time) we can get latest value
+
+Or else order by date time desc
+
+Method 1
+
+import org.apache.spark.sql.functions._
+
+val df = spark.createDataFrame(Seq(
+  (1, "Ram", "11:15:52"),
+  (2, "Vishnu", "11:20:30"),
+  (1, "Ram", "11:45:45"),
+  (2, "Vishnu", "11:52:00")
+)).toDF("id", "name", "datetime")
+
+val latestDF = df.groupBy("id")
+  .agg(
+    max("datetime").alias("datetime"),
+    first("name").alias("name")
+  )
+
+latestDF.show()
+
+Method 2
+
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.expressions.Window
+
+val df = spark.createDataFrame(Seq(
+  (1, "Ram", "11:15:52"),
+  (2, "Vishnu", "11:20:30"),
+  (1, "Ram", "11:45:45"),
+  (2, "Vishnu", "11:52:00")
+)).toDF("id", "name", "datetime")
+
+val windowSpec = Window.partitionBy("id")
+  .orderBy(col("datetime").desc)
+
+val latestDF = df.withColumn("rn", row_number().over(windowSpec))
+  .where(col("rn") === 1)
+  .select("id", "name", "datetime")
+
+latestDF.show()
+
