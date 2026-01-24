@@ -1,0 +1,30 @@
+Rysun labs
+Project details
+TableA:- 
+ID
+1
+1
+1
+Table B:
+ID
+1
+1
+2
+3
+ 
+What would be output of below query:
+Select a.id
+From TableA a left join TableB b
+On a.id=b.id
+15:12 Consider  below dataset. Country_name, Sale... by Biswajit OjhaBiswajit Ojha
+Consider  below dataset.
+Country_name, Sales,Item
+India, 50k,Sugar-cane
+US,80k,Oil,
+UK,80k,Wheat
+India,90k, Rice
+ 
+Write a code in Spark code to give top 2 country-wise sales
+
+IN same S3 can you store the same file with transformations
+RDD vs Dataframe
