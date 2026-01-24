@@ -1,0 +1,88 @@
+TCS Managerial Round + Technical Round Interview Q
+cumulative sum example - gave as scenario to solve
+union and union all difference
+nvl() and coalesce() - to replace null values
+performance tuning techniques
+project
+what kind of work with each client
+which all databases you have worked on 
+coalesce and repartitioning - which one to use when want to reduce the no of partitions
+kryo serialization
+how to convert df back to rdd
+rest few Q from gold video
+
+-----------
+
+TCS - Screening Round Question 
+- what are rdd
+- ⁠difference between reduce and reduceby key
+
+----------
+TCS technical round 1 questions:
+What is rdd?
+Difference between rdd and data set and dataframe?
+What is lazy evaluation?
+Difference between managed table and external table?
+Can we drop managed table?
+Can we change the directory of managed table?
+What is shuffling?
+What are partitions? Why they are used?
+What are different file formats spark supports?
+What are different storage levels of persist?
+What is case class?
+What is tuple? How is it different from List or Array?
+Project explanation
+
+----------------
+
+Yes we can change the directory of managed table
+
+hadoop fs -mv <old directlory path> *<new directory path>
+
+--------------
+
+TCS Technical round + managerial round
+1)	What is the default block size in hadoop
+2)	Calculate 1TB data for 128mb as default block size
+3)	What are the difference between row number,dense-rank and rank
+4)	What are joins. What is left join. What is left outer join
+5)	What is the main difference between transformations and actions based on RDD
+6)	Spark submit syntax
+7)	What is special about touchz command
+8)	Asked any difficult situation handled in the project and what is your contribution to it : I discussed about the schema change in snowflake and some team has changed the schema in our code and figured out the issue and changed the schema and deployed
+9)	Any implements on reducing the cost to the client side. I discussed about the spot nodes in aws as sai said
+10)	Why are you changing the company they ask
+
+Can anyone please tell me how to calculate it :
+Calculate 1TB data for 128mb as default block size
+screen- calculate-block-tcs-interview
+
+
+---------------
+
+TCS Screening Round :
+Tell about the project
+Sources for writing the data
+What is target
+How did you do the orchestration 
+Hdfs commands that you used
+What is case class
+What is distcp
+How would you handle exception
+How would you identify the flow of the jobs if there are multiple jobs running
+
+Case class is used to impose column names or schemas on rdd when changing it to DF. also it is immutable and used for matching patterns.
+Case class is key value pair definition which we can also define a value and extend it to other objects.
+
+To identify the flow of job we will always refer to DAG to check the stages and tasks created and its transformation if it is a success or if there is a failure
+
+distcp is used to copy data from hdfs to s3/cloud/blob storage
+
+If you're having 100 gb of data in on prem and need to migrate  to AWS what tool will be using?
+ans: Aws Data Sync
+
+Exceptions can handled by using try catch blocks in the code.
+
+
+
+

@@ -1,0 +1,175 @@
+Sqoop
+======
+
+Sqoop is a tool designed to transfer data between Hadoop and relational databases. 
+You can use Sqoop to import data from a relational database management system (RDBMS) such as MySQL or Oracle into the Hadoop Distributed File System (HDFS), 
+transform the data in Hadoop MapReduce, and then export the data back into an RDBMS.
+
+Sqoop automates most of this process, relying on the database to describe the schema for the data to be imported. 
+Sqoop uses MapReduce to import and export the data, which provides parallel operation as well as fault tolerance.
+
+Note that generic Hadoop arguments are preceeded by a single dash character (-), whereas tool-specific arguments start with two dashes (--), 
+unless they are single character arguments such as -P.
+
+Sqoop will read the table row-by-row into HDFS
+
+usage: sqoop COMMAND [ARGS]
+Available commands:
+  codegen            Generate code to interact with database records
+  create-hive-table  Import a table definition into Hive
+  eval               Evaluate a SQL statement and display the results
+  export             Export an HDFS directory to a database table
+  help               List available commands
+  import             Import a table from a database to HDFS
+  import-all-tables  Import tables from a database to HDFS
+  import-mainframe   Import datasets from a mainframe server to HDFS
+  job                Work with saved jobs
+  list-databases     List available databases on a server
+  list-tables        List available tables in a database
+  merge              Merge results of incremental imports
+  metastore          Run a standalone Sqoop metastore
+  version            Display version information
+See 'sqoop help COMMAND' for information on a specific command.
+
+Sqoop Import
+============
+
+sqoop import --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db --username sqoopuser -P -table products_sq 
+-m 1 --target-dir manoj/sqoop/task1_importall
+
+Importwith mappers 2
+====================
+
+sqoop import --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db --username sqoopuser -P -table products_sq 
+-m 2 --target-dir manoj/sqoop/task1_importall
+_with_mappers
+
+Append
+=========
+
+sqoop import --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db --username sqoopuser -P -table products_sq 
+-m 1 --append --target-dir manoj/sqoop/task1_importall
+
+Incremental append
+====================
+
+sqoop import --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db --username sqoopuser -P -table products_sq1 
+-m 1 --target-dir manoj/sqoop/task1_importall --incremental append --check-column product_id --last-value 8
+
+sqoop job --create job_25 --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db --username sqoopuser -P -table products_sq1 
+-m 1 --target-dir manoj/sqoop/Autojob --incremental append --check-column product_id --last-value 0
+
+
+
+password - manoj/sqoop/sqoop.password
+
+Sqoop Job
+=========
+Sqoop job --create job_auto_test -- import --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db --username sqoopuser 
+--passwod-file manoj/sqoop/sqoop.password --table sqoop_timestamp --m 1 --ta
+rget-dir manoj/sqoop/Auto_test --incremental append --check-cloumn trans_time --last-value 00-00-00-00:00:00:0
+
+
+sqoop job --list
+
+sqoop job --exec job26_timestamp
+
+sqoop job --show job26_timestamp
+
+Job: job26_timestamp
+Tool: import
+Options:
+----------------------------
+verbose = false
+hcatalog.drop.and.create.table = false
+
+
+incremental.last.value = 2019-11-26 15:18:22.0
+
+incremental.last.value = 2019-11-27 09:47:17.0
+
+
+db.connect.string = jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db
+codegen.output.delimiters.escape = 0
+codegen.output.delimiters.enclose.required = false
+codegen.input.delimiters.field = 0
+mainframe.input.dataset.type = p
+split.limit = null
+hbase.create.table = false
+skip.dist.cache = false
+hdfs.append.dir = true
+hive.compute.stats.table = false
+db.table = sqoop_timestamp
+codegen.input.delimiters.escape = 0
+accumulo.create.table = false
+import.fetch.size = null
+codegen.input.delimiters.enclose.required = false
+db.username = sqoopuser
+reset.onemapper = false
+codegen.output.delimiters.record = 10
+import.max.inline.lob.size = 16777216
+hbase.bulk.load.enabled = false
+hcatalog.create.table = false
+db.clear.staging.table = false
+incremental.col = transc_time
+codegen.input.delimiters.record = 0
+db.password.file = manoj/sqoop/sqoop.password
+enable.compression = false
+hive.overwrite.table = false
+hive.import = false
+
+Controlling Parallelism
+
+Sqoop imports data in parallel from most database sources. You can specify the number of map tasks (parallel processes) to use 
+to perform the import by using the -m or --num-mappers argument. Each of these arguments takes an integer value which corresponds 
+to the degree of parallelism to employ. By default, four tasks are used. Some databases may see improved performance by increasing 
+this value to 8 or 16. Do not increase the degree of parallelism greater than that available within your MapReduce cluster; tasks 
+will run serially and will likely increase the amount of time required to perform the import. Likewise, do not increase the degree 
+of parallism higher than that which your database can reasonably support. Connecting 100 concurrent clients to your database may 
+increase the load on the database server to a point where performance suffers as a result.
+
+When performing parallel imports, Sqoop needs a criterion by which it can split the workload. Sqoop uses a splitting column to split 
+the workload. By default, Sqoop will identify the primary key column (if present) in a table and use it as the splitting column. 
+The low and high values for the splitting column are retrieved from the database, and the map tasks operate on evenly-sized components 
+of the total range. For example, if you had a table with a primary key column of id whose minimum value was 0 and maximum value was 1000, 
+and Sqoop was directed to use 4 tasks, Sqoop would run four processes which each execute SQL statements of the form SELECT * FROM sometable 
+
+WHERE id >= lo AND id < hi, with (lo, hi) set to (0, 250), (250, 500), (500, 750), and (750, 1001) in the different tasks.
+
+If the actual values for the primary key are not uniformly distributed across its range, then this can result in unbalanced tasks. You should 
+explicitly choose a different column with the --split-by argument. For example, --split-by employee_id. Sqoop cannot currently split on multi-column indices. 
+If your table has no index column, or has a multi-column key, then you must also manually choose a splitting column.
+
+sqoop job --create job_25 -- import --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db --username sqoopuser --password-file manoj/sqoop/sqoop.password 
+-table products_sq1 -m 1 --target-dir manoj/sqoop/Autojob --incremental append --check-column product_id --last-value 0
+
+
+sqoop job --create job_26_date2 -- import --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db --username sqoopuser 
+--password-file manoj/sqoop/sqoop.password -table customers_sq --target-dir manoj/sqoop/jo26_date --incremental append --check-column birth_date 
+--last-value 0000-00-00
+
+
+list the job 
+
+sqoop job --list
+sqoop job --delete 
+
+
+sqoop job --create job26_timestamp -- import --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db --username sqoopuser 
+--password-file manoj/sqoop/sqoop.password -table sqoop_timestamp -m 1 --target-dir manoj/sqoop/timestamp --incremental append 
+--check-column transc_time --last-value 0000-00-00-00:00:00
+
+Avro
+
+sqoop import -Dmapreduce.job.user.classpath.first=true --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db 
+--username sqoopuser --password-file manoj/sqoop/sqoop.password -table products_sq1 -m 1 --target-dir manoj/sqoop/avro2 --as-avrodatafile
+
+parquetfile
+
+
+sqoop import -Dmapreduce.job.user.classpath.first=true --connect jdbc:mysql://cxln2.c.thelab-240901.internal/retail_db --username sqoopuser 
+--password-file manoj/sqoop/sqoop.password -table products_sq1 -m 1 --target-dir manoj/sqoop/parq --as-parquetfile
+
+
+
+
